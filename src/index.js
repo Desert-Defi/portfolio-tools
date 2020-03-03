@@ -2,8 +2,4 @@ import Simulation from './simulation.js';
 import Strategy from './strategy.js';
 import backtester from './backtester.js';
 
-export default {
-  Strategy,
-  Simulation,
-  backtester
-};
+export { Strategy, Simulation, backtester };

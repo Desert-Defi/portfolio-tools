@@ -21,4 +21,4 @@ const calcTotalReturns = returnsSeries => {
   return totalReturns;
 };
 
-export default { calcReturns, calcTotalReturns };
+export { calcReturns, calcTotalReturns };
