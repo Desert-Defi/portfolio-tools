@@ -1,4 +1,4 @@
-import backtester from './backtester';
+import backtester from './backtester.js';
 
 export default class Strategy {
   constructor(

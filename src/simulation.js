@@ -1,5 +1,5 @@
-import Strategy from './strategy';
-import backtester from './backtester';
+import Strategy from './strategy.js';
+import backtester from './backtester.js';
 
 export default class Simulation {
   constructor(pricesByAsset, strategy, options = {}, context = {}) {

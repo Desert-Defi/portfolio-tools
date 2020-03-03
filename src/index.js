@@ -1,6 +1,6 @@
-import Simulation from './simulation';
-import Strategy from './strategy';
-import backtester from './backtester';
+import Simulation from './simulation.js';
+import Strategy from './strategy.js';
+import backtester from './backtester.js';
 
 export default {
   Strategy,

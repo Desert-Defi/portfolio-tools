@@ -1,6 +1,6 @@
 // strategy template
 
-import Strategy from '../strategy';
+import Strategy from '../strategy.js';
 
 const calcWeights = (dateIndex, pricesByAsset, options, context) => {
   // initialize weights

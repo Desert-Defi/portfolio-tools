@@ -14,5 +14,7 @@
       "email": "afryer@alumni.stanford.edu",
       "url": "https://ajfryer.github.io/personal-portfolio/"
     }
-  ]
+  ],
+  "dependencies": {},
+  "type": "module"
 }
