@@ -1,0 +1,18 @@
+{
+  "name": "portfolio-tools",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "license": "MIT",
+  "author": {
+    "name": "Justin Greene",
+    "email": "justin.greene5@gmail.com",
+    "url": "https://jgrizzled.github.io/portfolio"
+  },
+  "contributors": [
+    {
+      "name": "Alex Fryer",
+      "email": "afryer@alumni.stanford.edu",
+      "url": "https://ajfryer.github.io/personal-portfolio/"
+    }
+  ]
+}
