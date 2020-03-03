@@ -15,9 +15,9 @@ Returns
 */
 
 export default function backtester(
+  pricesByAsset,
   calcWeights,
   checkRebalance,
-  pricesByAsset,
   options = {},
   context = {}
 ) {
@@ -26,7 +26,9 @@ export default function backtester(
 
   // initialize results
   const returns = [0];
-  const weightsByAsset = Array(pricesByAsset.length).fill([0]);
+  const weightsByAsset = Array(pricesByAsset.length)
+    .fill(0)
+    .map(w => [0]);
 
   let currentWeights = Array(pricesByAsset.length).fill(0);
   let lastRebalanceIndex = null;
@@ -56,7 +58,6 @@ export default function backtester(
     ) {
       // check if new weight calculations differ from current
       if (currentWeights.some((cw, i) => cw !== newWeights[i])) {
-        console.log('Rebalancing at date index ' + dateIndex);
         currentWeights = newWeights;
         lastRebalanceIndex = dateIndex;
       }

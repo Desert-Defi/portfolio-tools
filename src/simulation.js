@@ -7,7 +7,7 @@ export default class Simulation {
       throw new Error('invalid pricesByAsset');
     this.pricesByAsset = pricesByAsset;
 
-    if (!(calcWeights instanceof Strategy))
+    if (!(strategy instanceof Strategy))
       throw new Error('strategy not an instance of Strategy');
     this.strategy = strategy;
 
@@ -22,8 +22,8 @@ export default class Simulation {
   run() {
     const [returns, weightsByAsset] = backtester(
       this.pricesByAsset,
-      this.calcWeights,
-      this.checkRebalance,
+      this.strategy.calcWeights,
+      this.strategy.checkRebalance,
       this.options,
       this.context
     );
