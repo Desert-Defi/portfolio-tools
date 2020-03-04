@@ -13,10 +13,10 @@ const calcReturns = priceSeries => {
 };
 
 const calcTotalReturns = returnsSeries => {
-  const totalReturns = [1 + returnsSeries[0]];
+  const totalReturns = [1];
   for (let i = 1; i < returnsSeries.length; i++) {
     const prev = totalReturns[i - 1];
-    totalReturns[i] = prev + prev * returnsSeries[i];
+    totalReturns[i] = prev + prev * returnsSeries[i - 1];
   }
   return totalReturns;
 };
