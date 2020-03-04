@@ -15,6 +15,12 @@
       "url": "https://ajfryer.github.io/personal-portfolio/"
     }
   ],
-  "dependencies": {},
-  "type": "module"
+  "dependencies": {
+    "csv-writer": "^1.6.0",
+    "node-fetch": "^2.6.0"
+  },
+  "type": "module",
+  "scripts": {
+    "csv": "node src/scripts/alpha-vantage-to-csv.js"
+  }
 }
