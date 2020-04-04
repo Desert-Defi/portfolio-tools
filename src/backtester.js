@@ -74,7 +74,7 @@ export default function backtester(
       const prev = pricesByAsset[assetIndex][dateIndex - 1];
       if (isNaN(prev)) throw new Error('NaN in pricesByAsset');
       if (prev <= 0 || curr <= 0) return r;
-      return r + w * ((curr - prev) / prev);
+      return r + w * (curr / prev - 1);
     }, 0);
 
     // calc new weights
@@ -95,14 +95,25 @@ export default function backtester(
       if (currentWeights.some((cw, i) => cw !== newWeights[i])) {
         currentWeights = newWeights;
         lastRebalanceIndex = dateIndex;
+        // record new weights
+        weightsByAsset.forEach(
+          (assetWeights, assetIndex) =>
+            (assetWeights[dateIndex] = currentWeights[assetIndex])
+        );
+        continue;
       }
     }
-
-    // record date's weights
-    weightsByAsset.forEach(
-      (assetWeights, assetIndex) =>
-        (assetWeights[dateIndex] = currentWeights[assetIndex])
-    );
+    // record adjusted weights
+    const vadi = 1 + returns[dateIndex];
+    weightsByAsset.forEach((assetWeights, assetIndex) => {
+      let ret = options.isReturns
+        ? pricesByAsset[assetIndex][dateIndex]
+        : pricesByAsset[assetIndex][dateIndex] /
+            pricesByAsset[assetIndex][dateIndex - 1] -
+          1;
+      return (assetWeights[dateIndex] =
+        (assetWeights[dateIndex - 1] * ret) / vadi);
+    });
   }
 
   return [returns, weightsByAsset];
