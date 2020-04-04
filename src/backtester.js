@@ -33,7 +33,11 @@ export default function backtester(
   let currentWeights = Array(pricesByAsset.length).fill(0);
   let lastRebalanceIndex = null;
   // iterate through dates
-  for (let dateIndex = 1; dateIndex < pricesByAsset[0].length; dateIndex++) {
+  for (
+    let dateIndex = options.isReturns ? 0 : 1;
+    dateIndex < pricesByAsset[0].length;
+    dateIndex++
+  ) {
     // calc date's return from prev date
     returns[dateIndex] = currentWeights.reduce((r, w, assetIndex) => {
       const curr = pricesByAsset[assetIndex][dateIndex];
