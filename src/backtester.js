@@ -57,15 +57,17 @@ export default function backtester(
           (assetWeights, assetIndex) =>
             (assetWeights[0] = currentWeights[assetIndex])
         );
+        //record return
+        returns[0] = currentWeights.reduce((r, w, assetIndex) => {
+          const curr = pricesByAsset[assetIndex][dateIndex];
+          if (isNaN(curr)) throw new Error('NaN in pricesByAsset');
+          return r + w * curr;
+        }, 0);
       }
     }
   }
   // iterate through dates
-  for (
-    let dateIndex = options.isReturns ? 0 : 1;
-    dateIndex < pricesByAsset[0].length;
-    dateIndex++
-  ) {
+  for (let dateIndex = 1; dateIndex < pricesByAsset[0].length; dateIndex++) {
     // calc date's return from prev date
     returns[dateIndex] = currentWeights.reduce((r, w, assetIndex) => {
       const curr = pricesByAsset[assetIndex][dateIndex];
@@ -106,13 +108,13 @@ export default function backtester(
     // record adjusted weights
     const vadi = 1 + returns[dateIndex];
     weightsByAsset.forEach((assetWeights, assetIndex) => {
-      let ret = options.isReturns
+      const ret = options.isReturns
         ? pricesByAsset[assetIndex][dateIndex]
         : pricesByAsset[assetIndex][dateIndex] /
             pricesByAsset[assetIndex][dateIndex - 1] -
           1;
-      return (assetWeights[dateIndex] =
-        (assetWeights[dateIndex - 1] * ret) / vadi);
+      assetWeights[dateIndex] =
+        (assetWeights[dateIndex - 1] * (1 + ret)) / vadi;
     });
   }
 
