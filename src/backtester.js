@@ -21,14 +21,14 @@ export default function backtester(
   options = {},
   context = {}
 ) {
-  if (pricesByAsset.some(el => el.length !== pricesByAsset[0].length))
+  if (pricesByAsset.some((el) => el.length !== pricesByAsset[0].length))
     throw new Error('pricesByAsset not uniform length');
 
   // initialize results
   const returns = [0];
   const weightsByAsset = Array(pricesByAsset.length)
     .fill(0)
-    .map(w => [0]);
+    .map((w) => [0]);
 
   let currentWeights = Array(pricesByAsset.length).fill(0);
   let lastRebalanceIndex = null;
@@ -36,9 +36,12 @@ export default function backtester(
   for (let dateIndex = 1; dateIndex < pricesByAsset[0].length; dateIndex++) {
     // calc date's return from prev date
     returns[dateIndex] = currentWeights.reduce((r, w, assetIndex) => {
-      const prev = pricesByAsset[assetIndex][dateIndex - 1];
       const curr = pricesByAsset[assetIndex][dateIndex];
-      if (prev <= 0 || curr <= 0 || isNaN(prev) || isNaN(curr)) return r;
+      if (isNaN(curr)) throw new Error('NaN in pricesByAsset');
+      if (options.isReturns) return r + w * curr;
+      const prev = pricesByAsset[assetIndex][dateIndex - 1];
+      if (isNaN(prev)) throw new Error('NaN in pricesByAsset');
+      if (prev <= 0 || curr <= 0) return r;
       return r + w * ((curr - prev) / prev);
     }, 0);
 
