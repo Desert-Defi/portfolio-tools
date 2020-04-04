@@ -42,7 +42,7 @@ export default function backtester(
       checkRebalance(
         currentWeights,
         newWeights,
-        dateIndex,
+        0,
         lastRebalanceIndex,
         options,
         context
