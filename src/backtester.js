@@ -1,10 +1,9 @@
 /*
 Params
-  calcWeights: function(dateIndex, pricesByAsset, options, context) returns weightByAsset[]
+  calcWeights: function(dateIndex, returnsByAsset, options, context) returns weightByAsset[]
   checkRebalance: function(currentWeights, newWeights, dateIndex, lastRebalanceIndex, options, context) returns bool
-  pricesByAsset: 2D array of prices by asset [ asset1Prices[], asset2Prices[], ... ]
+  returnsByAsset: 2D array of returns by asset [ asset1Returns[], asset2Returns[], ... ]
   options (optional): object that gets passed to calcWeights and checkRebalance with strategy options
-    options.isReturns: set to true if passing in returns series for pricesByAsset[]
   context (optional): object that gets passed to calcWeights and checkRebalance with contextual data
 
 Returns
@@ -15,77 +14,104 @@ Returns
   ]
 */
 
+const round = (value, decimals) =>
+  Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+const precision = 14;
+
 export default function backtester(
-  pricesByAsset,
+  returnsByAsset,
   calcWeights,
   checkRebalance,
   options = {},
   context = {}
 ) {
-  if (pricesByAsset.some((el) => el.length !== pricesByAsset[0].length))
-    throw new Error('pricesByAsset not uniform length');
+  if (returnsByAsset.some((el) => el.length !== returnsByAsset[0].length))
+    throw new Error('returnsByAsset not uniform length');
 
   // initialize results
-  const returns = [0];
-  const weightsByAsset = Array(pricesByAsset.length)
+  const returns = [];
+  const weightsByAsset = Array(returnsByAsset.length)
     .fill(0)
-    .map((w) => [0]);
-  let currentWeights = Array(pricesByAsset.length).fill(0);
+    .map(() => [0]);
   let lastRebalanceIndex = null;
-  let newWeights = null;
+  let initialWeights = Array(returnsByAsset.length).fill(0);
 
-  // set weights for first day
-  if (options.isReturns) {
-    newWeights = calcWeights(0, pricesByAsset, options, context);
-    // check if should rebalance
-    if (
-      checkRebalance(
-        currentWeights,
-        newWeights,
-        0,
-        lastRebalanceIndex,
-        options,
-        context
-      )
-    ) {
-      // check if new weight calculations differ from current
-      if (currentWeights.some((cw, i) => cw !== newWeights[i])) {
-        currentWeights = newWeights;
-        lastRebalanceIndex = 0;
-        // record weights
-        weightsByAsset.forEach(
-          (assetWeights, assetIndex) =>
-            (assetWeights[0] = currentWeights[assetIndex])
-        );
-        //record return
-        returns[0] = currentWeights.reduce((r, w, assetIndex) => {
-          const curr = pricesByAsset[assetIndex][dateIndex];
-          if (isNaN(curr)) throw new Error('NaN in pricesByAsset');
-          return r + w * curr;
-        }, 0);
-      }
+  // calc initial weights
+  let newWeights = calcWeights(0, returnsByAsset, options, context);
+
+  // sanity check
+  let newWeightsSum = round(
+    newWeights.reduce((sum, w) => w + sum, 0),
+    precision
+  );
+  if (newWeightsSum !== 1 && newWeightsSum !== 0)
+    throw new Error('New weights dont sum to 1 or 0');
+
+  // check if should rebalance
+  if (
+    checkRebalance(
+      initialWeights,
+      newWeights,
+      0,
+      lastRebalanceIndex,
+      options,
+      context
+    )
+  ) {
+    // check if new weight calculations differ from current
+    if (initialWeights.some((cw, i) => cw !== newWeights[i])) {
+      lastRebalanceIndex = 0;
+      // record weights
+      initialWeights = newWeights;
     }
   }
+
+  // calc initial returns
+  returns[0] = initialWeights.reduce((r, w, assetIndex) => {
+    const curr = returnsByAsset[assetIndex][0];
+    if (isNaN(curr)) throw new Error('NaN in returnsByAsset');
+    return r + w * curr;
+  }, 0);
+
+  // record initial weights
+  let totRet = 1 + returns[0];
+  weightsByAsset.forEach((assetWeights, assetIndex) => {
+    const ret = returnsByAsset[assetIndex][0];
+    assetWeights[0] = (initialWeights[assetIndex] * (1 + ret)) / totRet || 0;
+  });
+
+  // sanity check
+  newWeightsSum = round(
+    weightsByAsset.reduce((sum, weights) => weights[0] + sum, 0),
+    precision
+  );
+  if (newWeightsSum !== 1 && newWeightsSum !== 0)
+    throw new Error('Adjusted weights dont sum to 1 or 0');
+
   // iterate through dates
-  for (let dateIndex = 1; dateIndex < pricesByAsset[0].length; dateIndex++) {
-    // calc date's return from prev date
-    returns[dateIndex] = currentWeights.reduce((r, w, assetIndex) => {
-      const curr = pricesByAsset[assetIndex][dateIndex];
-      if (isNaN(curr)) throw new Error('NaN in pricesByAsset');
-      if (options.isReturns) return r + w * curr;
-      const prev = pricesByAsset[assetIndex][dateIndex - 1];
-      if (isNaN(prev)) throw new Error('NaN in pricesByAsset');
-      if (prev <= 0 || curr <= 0) return r;
-      return r + w * (curr / prev - 1);
+  for (let dateIndex = 1; dateIndex < returnsByAsset[0].length; dateIndex++) {
+    // calc date's return
+    returns[dateIndex] = weightsByAsset.reduce((r, weights, assetIndex) => {
+      const curr = returnsByAsset[assetIndex][dateIndex];
+      if (isNaN(curr)) throw new Error('NaN in returnsByAsset');
+      return r + weights[dateIndex - 1] * curr;
     }, 0);
 
     // calc new weights
-    newWeights = calcWeights(dateIndex, pricesByAsset, options, context);
+    newWeights = calcWeights(dateIndex, returnsByAsset, options, context);
+
+    // sanity check
+    newWeightsSum = round(
+      newWeights.reduce((sum, w) => w + sum, 0),
+      precision
+    );
+    if (newWeightsSum !== 1 && newWeightsSum !== 0)
+      throw new Error('New weights dont sum to 1 or 0');
 
     // check if should rebalance
     if (
       checkRebalance(
-        currentWeights,
+        weightsByAsset[dateIndex - 1],
         newWeights,
         dateIndex,
         lastRebalanceIndex,
@@ -94,28 +120,43 @@ export default function backtester(
       )
     ) {
       // check if new weight calculations differ from current
-      if (currentWeights.some((cw, i) => cw !== newWeights[i])) {
-        currentWeights = newWeights;
+      if (
+        weightsByAsset.some(
+          (weights, assetIndex) =>
+            weights[dateIndex - 1] !== newWeights[assetIndex]
+        )
+      ) {
         lastRebalanceIndex = dateIndex;
         // record new weights
         weightsByAsset.forEach(
           (assetWeights, assetIndex) =>
-            (assetWeights[dateIndex] = currentWeights[assetIndex])
+            (assetWeights[dateIndex] = newWeights[assetIndex])
         );
         continue;
       }
     }
     // record adjusted weights
-    const vadi = 1 + returns[dateIndex];
+    totRet = 1 + returns[dateIndex];
     weightsByAsset.forEach((assetWeights, assetIndex) => {
-      const ret = options.isReturns
-        ? pricesByAsset[assetIndex][dateIndex]
-        : pricesByAsset[assetIndex][dateIndex] /
-            pricesByAsset[assetIndex][dateIndex - 1] -
-          1;
-      assetWeights[dateIndex] =
-        (assetWeights[dateIndex - 1] * (1 + ret)) / vadi;
+      const ret = returnsByAsset[assetIndex][dateIndex];
+      const w = (assetWeights[dateIndex - 1] * (1 + ret)) / totRet || 0;
+      if (
+        returnsByAsset[0].length - dateIndex <= 7 &&
+        assetWeights[dateIndex - 1] > 0
+      )
+        debugger;
+      assetWeights[dateIndex] = w;
     });
+
+    // sanity check
+    newWeightsSum = round(
+      weightsByAsset.reduce((sum, weights) => weights[dateIndex] + sum, 0),
+      precision
+    );
+    if (newWeightsSum !== 1 && newWeightsSum !== 0) {
+      debugger;
+      throw new Error('Adjusted weights dont sum to 1 or 0');
+    }
   }
 
   return [returns, weightsByAsset];

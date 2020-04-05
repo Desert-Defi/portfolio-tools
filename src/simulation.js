@@ -2,26 +2,26 @@ import Strategy from './strategy.js';
 import backtester from './backtester.js';
 
 export default class Simulation {
-  constructor(pricesByAsset, strategy, options = {}, context = {}) {
-    if (!Array.isArray(pricesByAsset) || pricesByAsset.length === 0)
-      throw new Error('invalid pricesByAsset');
-    this.pricesByAsset = pricesByAsset;
+  constructor(returnsByAsset, strategy, options = {}, context = {}) {
+    if (!Array.isArray(returnsByAsset) || returnsByAsset.length === 0)
+      throw new Error('invalid returnsByAsset');
+    this.returnsByAsset = returnsByAsset;
 
     if (!(strategy instanceof Strategy))
       throw new Error('strategy not an instance of Strategy');
     this.strategy = strategy;
 
-    strategy.validateOptions(options, pricesByAsset);
+    strategy.validateOptions(options, returnsByAsset);
     this.options = options;
 
-    strategy.validateContext(context, pricesByAsset);
+    strategy.validateContext(context, returnsByAsset);
     this.context = context;
 
     this.results = null;
   }
   run() {
     const [returns, weightsByAsset] = backtester(
-      this.pricesByAsset,
+      this.returnsByAsset,
       this.strategy.calcWeights,
       this.strategy.checkRebalance,
       this.options,
