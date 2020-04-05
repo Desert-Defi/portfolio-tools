@@ -1,5 +1,7 @@
-import Simulation from './simulation.js';
-import Strategy from './strategy.js';
-import backtester from './backtester.js';
-
-export { Strategy, Simulation, backtester };
+export { default as Simulation } from './simulation.js';
+export { default as Strategy } from './strategy.js';
+export { default as backtester } from './backtester.js';
+export * from './math/matrix';
+export * from './math/returns';
+export { default as round } from './math/round';
+export { default as calcSMA } from './math/sma';
