@@ -14,7 +14,7 @@ Returns
   ]
 */
 
-import round from './math/round';
+import round from './math/round.js';
 
 const precision = 14;
 
