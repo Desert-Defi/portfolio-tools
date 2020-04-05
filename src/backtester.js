@@ -80,14 +80,6 @@ export default function backtester(
     assetWeights[0] = (initialWeights[assetIndex] * (1 + ret)) / totRet || 0;
   });
 
-  // sanity check
-  newWeightsSum = round(
-    weightsByAsset.reduce((sum, weights) => weights[0] + sum, 0),
-    precision
-  );
-  if (newWeightsSum !== 1 && newWeightsSum !== 0)
-    throw new Error('Adjusted weights dont sum to 1 or 0');
-
   // iterate through dates
   for (let dateIndex = 1; dateIndex < returnsByAsset[0].length; dateIndex++) {
     // calc date's return
@@ -135,28 +127,14 @@ export default function backtester(
         continue;
       }
     }
+
     // record adjusted weights
     totRet = 1 + returns[dateIndex];
     weightsByAsset.forEach((assetWeights, assetIndex) => {
       const ret = returnsByAsset[assetIndex][dateIndex];
-      const w = (assetWeights[dateIndex - 1] * (1 + ret)) / totRet || 0;
-      if (
-        returnsByAsset[0].length - dateIndex <= 7 &&
-        assetWeights[dateIndex - 1] > 0
-      )
-        debugger;
-      assetWeights[dateIndex] = w;
+      assetWeights[dateIndex] =
+        (assetWeights[dateIndex - 1] * (1 + ret)) / totRet || 0;
     });
-
-    // sanity check
-    newWeightsSum = round(
-      weightsByAsset.reduce((sum, weights) => weights[dateIndex] + sum, 0),
-      precision
-    );
-    if (newWeightsSum !== 1 && newWeightsSum !== 0) {
-      debugger;
-      throw new Error('Adjusted weights dont sum to 1 or 0');
-    }
   }
 
   return [returns, weightsByAsset];
