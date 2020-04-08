@@ -1,5 +1,6 @@
 import math from 'mathjs';
-import { linearRegression } from 'simple-statistics';
+import SS from 'simple-statistics';
+const { linearRegression } = SS;
 import PortfolioAnalytics from 'portfolio-analytics';
 
 export const hurstExponent = (series) => {
