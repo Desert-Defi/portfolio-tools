@@ -25,7 +25,7 @@ export default function backtester(
   options = {},
   context = {}
 ) {
-  if (returnsByAsset.some((el) => el.length !== returnsByAsset[0].length))
+  if (returnsByAsset.some(el => el.length !== returnsByAsset[0].length))
     throw new Error('returnsByAsset not uniform length');
 
   // initialize results
@@ -89,6 +89,14 @@ export default function backtester(
       return r + weights[dateIndex - 1] * curr;
     }, 0);
 
+    // record adjusted weights
+    totRet = 1 + returns[dateIndex];
+    weightsByAsset.forEach((assetWeights, assetIndex) => {
+      const ret = returnsByAsset[assetIndex][dateIndex];
+      assetWeights[dateIndex] =
+        (assetWeights[dateIndex - 1] * (1 + ret)) / totRet || 0;
+    });
+
     // calc new weights
     newWeights = calcWeights(dateIndex, returnsByAsset, options, context);
 
@@ -103,7 +111,7 @@ export default function backtester(
     // check if should rebalance
     if (
       checkRebalance(
-        weightsByAsset[dateIndex - 1],
+        weightsByAsset[dateIndex],
         newWeights,
         dateIndex,
         lastRebalanceIndex,
@@ -114,8 +122,7 @@ export default function backtester(
       // check if new weight calculations differ from current
       if (
         weightsByAsset.some(
-          (weights, assetIndex) =>
-            weights[dateIndex - 1] !== newWeights[assetIndex]
+          (weights, assetIndex) => weights[dateIndex] !== newWeights[assetIndex]
         )
       ) {
         lastRebalanceIndex = dateIndex;
@@ -127,14 +134,6 @@ export default function backtester(
         continue;
       }
     }
-
-    // record adjusted weights
-    totRet = 1 + returns[dateIndex];
-    weightsByAsset.forEach((assetWeights, assetIndex) => {
-      const ret = returnsByAsset[assetIndex][dateIndex];
-      assetWeights[dateIndex] =
-        (assetWeights[dateIndex - 1] * (1 + ret)) / totRet || 0;
-    });
   }
 
   return [returns, weightsByAsset];
