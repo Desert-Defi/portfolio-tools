@@ -17,7 +17,10 @@
   ],
   "dependencies": {
     "csv-writer": "^1.6.0",
-    "node-fetch": "^2.6.0"
+    "mathjs": "^6.6.2",
+    "node-fetch": "^2.6.0",
+    "portfolio-allocation": "^0.0.7",
+    "portfolio-analytics": "^0.0.4"
   },
   "type": "module",
   "scripts": {
