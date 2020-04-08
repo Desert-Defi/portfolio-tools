@@ -1,6 +1,3 @@
-const { add } = require('mathjs');
-const { linearRegression } = require('simple-statistics');
-
 import { add } from 'mathjs';
 import { linearRegression } from 'simple-statistics';
 import PortfolioAnalytics from 'portfolio-analytics';
