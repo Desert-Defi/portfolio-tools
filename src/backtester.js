@@ -35,7 +35,10 @@ export default function backtester(
   let lastRebalanceIndex = null;
 
   // check if we should calculate new weights
-  if (options.lookbackPeriod && options.lookbackPeriod <= 0) {
+  if (
+    (options.lookbackPeriod && options.lookbackPeriod <= 0) ||
+    !options.lookbackPeriod
+  ) {
     // calc initial weights
     let newWeights = calcWeights(0, returnsByAsset, options, context);
     validateWeights(newWeights);
