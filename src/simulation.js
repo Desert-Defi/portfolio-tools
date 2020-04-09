@@ -23,7 +23,6 @@ export default class Simulation {
     const [returns, weightsByAsset] = backtester(
       this.returnsByAsset,
       this.strategy.calcWeights,
-      this.strategy.checkRebalance,
       this.options,
       this.context
     );

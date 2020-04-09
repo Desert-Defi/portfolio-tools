@@ -21,7 +21,6 @@ const precision = 14;
 export default function backtester(
   returnsByAsset,
   calcWeights,
-  checkRebalance,
   options = {},
   context = {}
 ) {
@@ -33,33 +32,19 @@ export default function backtester(
   const weightsByAsset = Array(returnsByAsset.length)
     .fill(0)
     .map(() => [0]);
-  let lastRebalanceIndex = null;
   let initialWeights = Array(returnsByAsset.length).fill(0);
+  let lastRebalanceIndex = null;
 
-  // calc initial weights
-  let newWeights = calcWeights(0, returnsByAsset, options, context);
+  // check if we should calculate new weights
+  if (options.lookbackPeriod && options.lookbackPeriod > 0) {
+    // calc initial weights
+    let newWeights = calcWeights(0, returnsByAsset, options, context);
+    validateWeights(newWeights);
 
-  // sanity check
-  let newWeightsSum = round(
-    newWeights.reduce((sum, w) => w + sum, 0),
-    precision
-  );
-  if (newWeightsSum !== 1 && newWeightsSum !== 0)
-    throw new Error('New weights dont sum to 1 or 0');
-
-  // check if should rebalance
-  if (
-    checkRebalance(
-      initialWeights,
-      newWeights,
-      0,
-      lastRebalanceIndex,
-      options,
-      context
-    )
-  ) {
     // check if new weight calculations differ from current
-    if (initialWeights.some((cw, i) => cw !== newWeights[i])) {
+    if (
+      checkWeightTolerance(initialWeights, newWeights, options.weightTolerance)
+    ) {
       lastRebalanceIndex = 0;
       // record weights
       initialWeights = newWeights;
@@ -97,44 +82,61 @@ export default function backtester(
         (assetWeights[dateIndex - 1] * (1 + ret)) / totRet || 0;
     });
 
-    // calc new weights
-    newWeights = calcWeights(dateIndex, returnsByAsset, options, context);
-
-    // sanity check
-    newWeightsSum = round(
-      newWeights.reduce((sum, w) => w + sum, 0),
-      precision
-    );
-    if (newWeightsSum !== 1 && newWeightsSum !== 0)
-      throw new Error('New weights dont sum to 1 or 0');
-
-    // check if should rebalance
+    // check if we should calculate new weights
+    let canRebalance = true;
     if (
-      checkRebalance(
-        weightsByAsset[dateIndex],
-        newWeights,
-        dateIndex,
-        lastRebalanceIndex,
-        options,
-        context
-      )
-    ) {
-      // check if new weight calculations differ from current
+      options.rebalancePeriod &&
+      lastRebalanceIndex !== null &&
+      dateIndex - lastRebalanceIndex < options.rebalancePeriod
+    )
+      canRebalance = false;
+    if (options.lookbackPeriod && dateIndex + 1 < options.lookbackPeriod)
+      canRebalance = false;
+
+    if (canRebalance) {
+      // calc new weights
+      newWeights = calcWeights(dateIndex, returnsByAsset, options, context);
+      validateWeights(newWeights);
+
+      // check if new weight calculations differ from tolerance
       if (
-        weightsByAsset.some(
-          (weights, assetIndex) => weights[dateIndex] !== newWeights[assetIndex]
+        checkWeightTolerance(
+          weightsByAsset.map(weights => weights[dateIndex]),
+          newWeights,
+          options.weightTolerance
         )
       ) {
+        // do rebalance
         lastRebalanceIndex = dateIndex;
+
         // record new weights
         weightsByAsset.forEach(
           (assetWeights, assetIndex) =>
             (assetWeights[dateIndex] = newWeights[assetIndex])
         );
-        continue;
       }
     }
   }
 
   return [returns, weightsByAsset];
 }
+
+const validateWeights = weights => {
+  // sanity check
+  const weightsSum = round(
+    weights.reduce((sum, w) => w + sum, 0),
+    precision
+  );
+  if (weightsSum !== 1 && weightsSum !== 0)
+    throw new Error('New weights dont sum to 1 or 0');
+};
+
+const checkWeightTolerance = (oldWeights, newWeights, tolerance = 0) => {
+  if (
+    oldWeights.some(
+      (w, assetIndex) => Math.abs(w - newWeights[assetIndex]) > tolerance
+    )
+  )
+    return true;
+  return false;
+};
