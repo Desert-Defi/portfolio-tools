@@ -1,10 +1,9 @@
 /*
 Params
   calcWeights: function(dateIndex, returnsByAsset, options, context) returns weightByAsset[]
-  checkRebalance: function(currentWeights, newWeights, dateIndex, lastRebalanceIndex, options, context) returns bool
   returnsByAsset: 2D array of returns by asset [ asset1Returns[], asset2Returns[], ... ]
-  options (optional): object that gets passed to calcWeights and checkRebalance with strategy options
-  context (optional): object that gets passed to calcWeights and checkRebalance with contextual data
+  options (optional): object that gets passed to calcWeights with strategy options
+  context (optional): object that gets passed to calcWeights with contextual data
 
 Returns
  Array
@@ -95,7 +94,12 @@ export default function backtester(
 
     if (canRebalance) {
       // calc new weights
-      newWeights = calcWeights(dateIndex, returnsByAsset, options, context);
+      const newWeights = calcWeights(
+        dateIndex,
+        returnsByAsset,
+        options,
+        context
+      );
       validateWeights(newWeights);
 
       // check if new weight calculations differ from tolerance
