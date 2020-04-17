@@ -1,9 +1,9 @@
-import math from 'mathjs';
-import SS from 'simple-statistics';
+import * as math from 'mathjs';
+import * as SS from 'simple-statistics';
 const { linearRegression } = SS;
 import PortfolioAnalytics from 'portfolio-analytics';
 
-export const hurstExponent = (series) => {
+export const hurstExponent = series => {
   let s = series;
   let y = [];
   let u = [...s];
@@ -14,7 +14,7 @@ export const hurstExponent = (series) => {
     y.push(PortfolioAnalytics.sampleStddev_(u));
     u = 0.5 * (u.filter((v, i) => i % 2 == 0) + u.filter((v, i) => i % 2 != 0));
   }
-  let xy = [math.add(k, 1), y.map((e) => Math.log2(e))].reduce((a, b) =>
+  let xy = [math.add(k, 1), y.map(e => Math.log2(e))].reduce((a, b) =>
     a.map((v, i) => [v, b[i]])
   );
   const p = linearRegression(xy);
